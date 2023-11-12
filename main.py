@@ -24,10 +24,7 @@ hose_x = SCREEN_WIDTH // 2 - hose_rect.width // 2
 hose_speed = 5
 
 # Água
-water_x = hose_x + hose_rect.width // 2
-water_y = SCREEN_HEIGHT - hose_rect.height
 water_speed = 5
-water_active = False
 water_list = []
 
 # Fogo
@@ -46,6 +43,26 @@ safety_line = SCREEN_HEIGHT - 50
 def draw_text(text, x, y):
     text_surface = font.render(text, True, FONT_COLOR)
     screen.blit(text_surface, (x, y))
+
+
+def update_water_shots():
+    global score, fire_on_fire
+    for water in water_list:
+        water[1] -= water_speed
+        water_rect = pygame.Rect(
+            water[0], water[1], water_image.get_width(), water_image.get_height()
+        )
+
+        if (
+            water_rect.colliderect(
+                pygame.Rect(fire_x, fire_y, fire_rect.width, fire_rect.height)
+            )
+            and fire_on_fire
+        ):
+            fire_on_fire = False
+            score += 1
+            water_list.remove(water)
+            break
 
 
 def update_screen():
@@ -88,28 +105,13 @@ def main():
 
         hose_x = max(0, min(hose_x, SCREEN_WIDTH - hose_rect.width))
 
-        for water in water_list:
-            water[1] -= water_speed
+        update_water_shots()
 
-        for water in water_list:
-            if (
-                fire_rect.colliderect(
-                    (water[0], water[1], water_rect.width, water_rect.height)
-                )
-                and fire_on_fire
-            ):
-                fire_on_fire = False
-                score += 1
-                water_list.remove(water)
-
-        if not fire_on_fire:
+        fire_y += fire_speed
+        if fire_y > safety_line or not fire_on_fire:
             fire_x = random.randint(0, SCREEN_WIDTH - fire_rect.width)
             fire_y = 0
             fire_on_fire = True
-
-        fire_y += fire_speed
-        if fire_y > safety_line:
-            fire_on_fire = False
 
         update_screen()
         clock.tick(60)
@@ -117,5 +119,4 @@ def main():
 
 if __name__ == "__main__":
     water_image = pygame.image.load("water.png")
-    water_rect = water_image.get_rect()
     main()
