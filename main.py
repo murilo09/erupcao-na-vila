@@ -2,15 +2,14 @@ import pygame
 import random
 import sys
 
-# Inicialização do Pygame
 pygame.init()
 
 # Constantes
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
 FONT_SIZE = 36
-FONT_COLOR = (0, 0, 0)
+BLACK = (0, 0, 0)
+ORANGE = (255, 165, 0)
+RED = (255, 0, 0)
 HITBOX_HEIGHT = 40
 FIRE_HITBOX_WIDTH = 23
 WATER_HITBOX_WIDTH = 25
@@ -19,8 +18,14 @@ OFFSET_Y = 5
 
 # Pygame
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Jogo de Incêndio Florestal")
-font = pygame.font.Font(None, FONT_SIZE)
+pygame.display.set_caption("Erupção na Vila")
+background_image = pygame.image.load("background.jpg")
+background_image = pygame.transform.scale(
+    background_image, (SCREEN_WIDTH, SCREEN_HEIGHT)
+)
+font = pygame.font.Font("PixelGameFont.ttf", FONT_SIZE)
+orange = pygame.Color(ORANGE)
+red = pygame.Color(RED)
 
 # Mangueira
 hose_speed = 5
@@ -45,9 +50,42 @@ trigger_delay = 1000
 safety_line = SCREEN_HEIGHT - 50
 
 
-def draw_text(text, x, y):
-    text_surface = font.render(text, True, FONT_COLOR)
-    screen.blit(text_surface, (x, y))
+def draw_gradient_text(screen, text, x, y, start_color, end_color):
+    global font
+    text_surface = font.render(text, True, pygame.Color("white"))
+
+    text_surface_copy = text_surface.copy()
+
+    height = text_surface_copy.get_height()
+    delta_r = (end_color.r - start_color.r) / height
+    delta_g = (end_color.g - start_color.g) / height
+    delta_b = (end_color.b - start_color.b) / height
+
+    pixel_array = pygame.PixelArray(text_surface_copy)
+
+    for py in range(height):
+        r = int(start_color.r + delta_r * py)
+        g = int(start_color.g + delta_g * py)
+        b = int(start_color.b + delta_b * py)
+        for px in range(text_surface_copy.get_width()):
+            if text_surface_copy.get_at((px, py))[3] > 0:
+                pixel_array[px, py] = (r, g, b)
+
+    del pixel_array
+
+    screen.blit(text_surface_copy, (x, y))
+
+
+def final_lives_display():
+    lives_width, lives_height = font.size(f"Vidas: {lives}")
+    clear_rect = pygame.Rect(
+        SCREEN_WIDTH - lives_width - 20, 5, lives_width + 10, lives_height + 5
+    )
+    screen.blit(background_image, clear_rect.topleft, clear_rect)
+    draw_gradient_text(
+        screen, f"Vidas: {lives}", SCREEN_WIDTH - lives_width - 10, 10, orange, red
+    )
+    pygame.display.update(clear_rect)
 
 
 def create_fire():
@@ -103,7 +141,7 @@ def update_water_shots():
 
 
 def update_screen():
-    screen.fill(WHITE)
+    screen.blit(background_image, (0, 0))
     for fire in fire_list:
         if fire[2]:
             screen.blit(fire_image, (fire[0], fire[1]))
@@ -113,10 +151,12 @@ def update_screen():
     for water in water_list:
         screen.blit(water_image, (water[0], water[1]))
 
-    pygame.draw.rect(screen, RED, (0, safety_line, SCREEN_WIDTH, 10))
-    draw_text(f"Pontuação: {score}", 10, 10)
-    lives_width, _ = font.size(f"Vidas: {lives}")
-    draw_text(f"Vidas: {lives}", SCREEN_WIDTH - lives_width - 10, 10)
+    draw_gradient_text(screen, f"Pontos: {score}", 10, 10, orange, red)
+    if lives > 0:
+        lives_width, _ = font.size(f"Vidas: {lives}")
+        draw_gradient_text(
+            screen, f"Vidas: {lives}", SCREEN_WIDTH - lives_width - 10, 10, orange, red
+        )
 
     pygame.display.update()
 
@@ -175,11 +215,19 @@ def main():
                     lives -= 1
                     fire_list.remove(fire)
                     if lives <= 0:
-                        print("Fogo atingiu a linha! Jogo encerrado.")
+                        final_lives_display()
+                        game_over_text = "Game Over"
+                        text_width, text_height = font.size(game_over_text)
+                        text_x = (SCREEN_WIDTH - text_width) // 2
+                        text_y = (SCREEN_HEIGHT - text_height) // 2
+                        draw_gradient_text(
+                            screen, game_over_text, text_x, text_y, orange, red
+                        )
+                        pygame.display.update()
+                        pygame.time.wait(3000)
                         running = False
                         break
-                    else:
-                        create_fire()
+                    create_fire()
 
         update_screen()
         clock.tick(60)
