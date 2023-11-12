@@ -11,6 +11,11 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 FONT_SIZE = 36
 FONT_COLOR = (0, 0, 0)
+HITBOX_HEIGHT = 40
+FIRE_HITBOX_WIDTH = 23
+WATER_HITBOX_WIDTH = 25
+OFFSET_X = 2
+OFFSET_Y = 5
 
 # Pygame
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -74,18 +79,25 @@ def update_water_shots():
     for water in water_list[:]:
         water[1] -= water_speed
         water_rect = pygame.Rect(
-            water[0], water[1], water_image.get_width(), water_image.get_height()
+            water[0] + (water_image.get_width() - WATER_HITBOX_WIDTH) // 2,
+            water[1] + OFFSET_Y,
+            WATER_HITBOX_WIDTH,
+            HITBOX_HEIGHT,
         )
 
         for fire in fire_list[:]:
             fire_rect = pygame.Rect(
-                fire[0], fire[1], fire_image.get_width(), fire_image.get_height()
+                (fire[0] + (fire_image.get_width() - FIRE_HITBOX_WIDTH) // 2)
+                + OFFSET_X,
+                fire[1] + OFFSET_Y,
+                FIRE_HITBOX_WIDTH,
+                HITBOX_HEIGHT,
             )
             if water_rect.colliderect(fire_rect) and fire[2]:
                 fire[2] = False
                 score += 1
-                water_list.remove(water)
                 fire_list.remove(fire)
+                water_list.remove(water)
                 create_fire()
                 break
 
@@ -145,7 +157,10 @@ def main():
             hose_x += hose_speed
         if keys[pygame.K_SPACE] and tempo_atual - last_shot_time >= trigger_delay:
             water_list.append(
-                [hose_x + hose_rect.width // 2, SCREEN_HEIGHT - hose_rect.height]
+                [
+                    hose_x + (hose_rect.width - water_image.get_width()) // 2,
+                    SCREEN_HEIGHT - hose_rect.height,
+                ]
             )
             last_shot_time = tempo_atual
 
