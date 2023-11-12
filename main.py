@@ -18,18 +18,18 @@ pygame.display.set_caption("Jogo de Incêndio Florestal")
 font = pygame.font.Font(None, FONT_SIZE)
 
 # Mangueira
+hose_speed = 5
 hose_image = pygame.image.load("hose.png")
 hose_rect = hose_image.get_rect()
 hose_x = SCREEN_WIDTH // 2 - hose_rect.width // 2
-hose_speed = 5
 
 # Água
-water_speed = 5
 water_list = []
+water_speed = 4
 
 # Fogo
-fire_speed = 2
 fire_list = []
+fire_speed = 2
 fire_image = pygame.image.load("fire.png")
 fire_rect = fire_image.get_rect()
 
@@ -53,14 +53,20 @@ def create_fire():
 
 
 def set_difficulty():
-    global score, hose_speed, trigger_delay, fire_list, fire_speed
-    if 15 <= score < 20 and len(fire_list) <= 3:
+    global score, hose_speed, trigger_delay, fire_list, fire_speed, water_speed
+    if 15 <= score < 25:
         hose_speed = 7
         trigger_delay = 700
-    elif score >= 20 and len(fire_list) <= 4:
+    elif 25 <= score < 30:
         fire_speed = 3
-        hose_speed = 9
+        water_speed = 5
+        hose_speed = 8
         trigger_delay = 500
+    elif score >= 30:
+        fire_speed = 4
+        water_speed = 6
+        hose_speed = 9
+        trigger_delay = 300
 
 
 def update_water_shots():
@@ -119,7 +125,7 @@ def main():
             create_fire()
         if score >= 15 and len(fire_list) < 3:
             create_fire()
-        if score >= 20 and len(fire_list) < 4:
+        if score >= 25 and len(fire_list) < 4:
             create_fire()
         set_difficulty()
 
