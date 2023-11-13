@@ -26,6 +26,9 @@ background_image = pygame.transform.scale(
 font = pygame.font.Font("PixelGameFont.ttf", FONT_SIZE)
 orange = pygame.Color(ORANGE)
 red = pygame.Color(RED)
+fire_extinguish_sound = pygame.mixer.Sound("fire_extinguish.wav")
+pygame.mixer.music.load("background_music.mp3")
+pygame.mixer.music.play(-1)
 
 # Mangueira
 hose_speed = 5
@@ -136,6 +139,7 @@ def update_water_shots():
                 score += 1
                 fire_list.remove(fire)
                 water_list.remove(water)
+                fire_extinguish_sound.play()
                 create_fire()
                 break
 
